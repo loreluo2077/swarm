@@ -1,5 +1,7 @@
 from configs.agents import *
 from swarm.repl import run_demo_loop
+from dotenv import load_dotenv
+load_dotenv()
 
 context_variables = {
     "customer_context": """Here is what you know about the customer's details:

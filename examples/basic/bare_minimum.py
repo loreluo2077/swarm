@@ -1,4 +1,6 @@
 from swarm import Swarm, Agent
+from dotenv import load_dotenv
+load_dotenv()
 
 client = Swarm()
 
