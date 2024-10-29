@@ -1,3 +1,4 @@
+# 从openai库导入聊天相关的类型定义
 from openai.types.chat import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
@@ -5,37 +6,40 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 from typing import List, Callable, Union, Optional
 
-# Third-party imports
+# 导入pydantic库用于数据验证和设置
 from pydantic import BaseModel
 
+# 定义一个类型别名：AgentFunction是一个可调用对象(函数)，
+# 返回类型可以是字符串、Agent对象或字典
 AgentFunction = Callable[[], Union[str, "Agent", dict]]
 
 
 class Agent(BaseModel):
-    name: str = "Agent"
-    model: str = "gpt-4o"
-    instructions: Union[str, Callable[[], str]] = "You are a helpful agent."
-    functions: List[AgentFunction] = []
-    tool_choice: str = None
-    parallel_tool_calls: bool = True
+    """AI代理的基本配置类"""
+    name: str = "Agent"                # 代理名称
+    model: str = "gpt-4o"             # 使用的AI模型
+    instructions: Union[str, Callable[[], str]] = "You are a helpful agent."  # 代理的指令/提示词
+    functions: List[AgentFunction] = [] # 代理可以使用的函数列表
+    tool_choice: str = None            # 工具选择
+    parallel_tool_calls: bool = True    # 是否允许并行调用工具
 
 
 class Response(BaseModel):
-    messages: List = []
-    agent: Optional[Agent] = None
-    context_variables: dict = {}
+    """响应类，用于存储代理的响应信息"""
+    messages: List = []                # 消息历史
+    agent: Optional[Agent] = None      # 相关的代理实例
+    context_variables: dict = {}       # 上下文变量
 
 
 class Result(BaseModel):
     """
-    Encapsulates the possible return values for an agent function.
-
-    Attributes:
-        value (str): The result value as a string.
-        agent (Agent): The agent instance, if applicable.
-        context_variables (dict): A dictionary of context variables.
+    封装代理函数的返回值
+    
+    属性:
+        value (str): 结果值（字符串形式）
+        agent (Agent): 代理实例（如果适用）
+        context_variables (dict): 上下文变量字典
     """
-
-    value: str = ""
-    agent: Optional[Agent] = None
-    context_variables: dict = {}
+    value: str = ""                    # 返回的结果值
+    agent: Optional[Agent] = None      # 相关的代理实例
+    context_variables: dict = {}       # 上下文变量

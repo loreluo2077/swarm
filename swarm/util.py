@@ -3,6 +3,12 @@ from datetime import datetime
 
 
 def debug_print(debug: bool, *args: str) -> None:
+    """
+    调试打印函数
+    Args:
+        debug: 是否启用调试输出
+        args: 要打印的消息参数
+    """
     if not debug:
         return
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -11,34 +17,56 @@ def debug_print(debug: bool, *args: str) -> None:
 
 
 def merge_fields(target, source):
+    """
+    递归合并两个字典的字段
+    Args:
+        target: 目标字典
+        source: 源字典
+    """
+     # 遍历源字典中的所有键值对
     for key, value in source.items():
+         # 如果值是字符串，直接追加到目标字典对应的值后面
         if isinstance(value, str):
             target[key] += value
+        # 如果值是字典，且不为空，则递归合并
         elif value is not None and isinstance(value, dict):
             merge_fields(target[key], value)
 
 
 def merge_chunk(final_response: dict, delta: dict) -> None:
+    """
+    合并响应块
+    专门用于合并API响应块的函数
+    Args:
+        final_response: 最终响应字典
+        delta: 需要合并的增量响应
+
+
+    """
+    # 1. 移除重复的 role 字段
+    # role 字段只需要在第一个响应中保留
     delta.pop("role", None)
+
+    # 2. 合并基本字段（如 content）
     merge_fields(final_response, delta)
-
-    tool_calls = delta.get("tool_calls")
-    if tool_calls and len(tool_calls) > 0:
-        index = tool_calls[0].pop("index")
-        merge_fields(final_response["tool_calls"][index], tool_calls[0])
-
+    try:
+        # 3. 特殊处理 tool_calls 字段
+        tool_calls = delta.get("tool_calls")
+        if tool_calls and len(tool_calls) > 0:
+            # 获取并移除索引
+            index = tool_calls[0].pop("index")
+            # 合并到对应索引的 tool_call
+            merge_fields(final_response["tool_calls"][index], tool_calls[0])
+    except (KeyError, IndexError) as e:
+        print(f"Error merging tool_calls: {e}")
 
 def function_to_json(func) -> dict:
     """
-    Converts a Python function into a JSON-serializable dictionary
-    that describes the function's signature, including its name,
-    description, and parameters.
-
+    将Python函数转换为JSON格式的字典描述
     Args:
-        func: The function to be converted.
-
+        func: 要转换的函数
     Returns:
-        A dictionary representing the function's signature in JSON format.
+        包含函数签名信息的字典
     """
     type_map = {
         str: "string",
@@ -51,6 +79,7 @@ def function_to_json(func) -> dict:
     }
 
     try:
+        # 获取函数的签名信息
         signature = inspect.signature(func)
     except ValueError as e:
         raise ValueError(
@@ -58,6 +87,7 @@ def function_to_json(func) -> dict:
         )
 
     parameters = {}
+     # 遍历所有参数
     for param in signature.parameters.values():
         try:
             param_type = type_map.get(param.annotation, "string")
@@ -67,6 +97,7 @@ def function_to_json(func) -> dict:
             )
         parameters[param.name] = {"type": param_type}
 
+    # 获取所有必需参数
     required = [
         param.name
         for param in signature.parameters.values()
