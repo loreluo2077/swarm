@@ -2,19 +2,16 @@ from swarm import Swarm, Agent
 from openai import OpenAI
 
 from dotenv import load_dotenv
-
 load_dotenv()
 
 client = Swarm()
 
 english_agent = Agent(
-    model="openai/gpt-3.5-turbo",
     name="English Agent",
     instructions="You only speak English.",
 )
 
 chinese_agent = Agent(
-    model="openai/gpt-3.5-turbo",
     name="Chinese Agent",
     instructions="You only speak Chinese (Mandarin). Always respond in simplified Chinese characters.",
 )

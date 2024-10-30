@@ -76,6 +76,8 @@ class Swarm:
             "stream": stream,                       # 是否流式输出
         }
 
+        debug_print(debug, "Creating chat completion with params:", create_params)
+
         # 如果有工具，添加并行工具调用设置
         if tools:
             create_params["parallel_tool_calls"] = agent.parallel_tool_calls

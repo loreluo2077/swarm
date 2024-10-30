@@ -23,12 +23,13 @@ def merge_fields(target, source):
         target: 目标字典
         source: 源字典
     """
-     # 遍历源字典中的所有键值对
     for key, value in source.items():
-         # 如果值是字符串，直接追加到目标字典对应的值后面
         if isinstance(value, str):
-            target[key] += value
-        # 如果值是字典，且不为空，则递归合并
+            # 对于 type 字段，直接赋值而不是拼接
+            if key == "type":
+                target[key] = value
+            else:
+                target[key] += value
         elif value is not None and isinstance(value, dict):
             merge_fields(target[key], value)
 
@@ -43,9 +44,13 @@ def merge_chunk(final_response: dict, delta: dict) -> None:
 
 
     """
-    # 1. 移除重复的 role 字段
-    # role 字段只需要在第一个响应中保留
-    delta.pop("role", None)
+    # 1. 如果是第一个块（包含role字段），设置sender
+    if "role" in delta:
+        final_response["role"] = delta["role"]
+        if "sender" in delta:
+            final_response["sender"] = delta["sender"]
+        delta.pop("role", None)
+        delta.pop("sender", None)
 
     # 2. 合并基本字段（如 content）
     merge_fields(final_response, delta)
